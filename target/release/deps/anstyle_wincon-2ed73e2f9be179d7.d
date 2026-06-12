@@ -1,0 +1,10 @@
+D:\SOLO-11\13-dna-fountain-storage\target\release\deps\anstyle_wincon-2ed73e2f9be179d7.d: C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\lib.rs C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\ansi.rs C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\stream.rs C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\windows.rs
+
+D:\SOLO-11\13-dna-fountain-storage\target\release\deps\libanstyle_wincon-2ed73e2f9be179d7.rlib: C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\lib.rs C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\ansi.rs C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\stream.rs C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\windows.rs
+
+D:\SOLO-11\13-dna-fountain-storage\target\release\deps\libanstyle_wincon-2ed73e2f9be179d7.rmeta: C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\lib.rs C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\ansi.rs C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\stream.rs C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\windows.rs
+
+C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\lib.rs:
+C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\ansi.rs:
+C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\stream.rs:
+C:\Users\ZhuanZ\.cargo\registry\src\mirrors.aliyun.com-0671735e7cc7f5e7\anstyle-wincon-3.0.11\src\windows.rs:

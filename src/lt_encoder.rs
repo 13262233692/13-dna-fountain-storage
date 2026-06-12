@@ -167,13 +167,20 @@ impl LTEncoder {
     }
 }
 
+struct PendingPacket {
+    packet: EncodedPacket,
+    unknown_degree: usize,
+    consumed: bool,
+}
+
 pub struct LTDecoder {
     block_size: usize,
     k: usize,
     original_size: usize,
     decoded_blocks: Vec<Option<Vec<u8>>>,
-    pending_packets: Vec<EncodedPacket>,
-    degrees: Vec<usize>,
+    packets: Vec<PendingPacket>,
+    block_to_packets: Vec<Vec<usize>>,
+    ripple: Vec<usize>,
 }
 
 impl LTDecoder {
@@ -183,8 +190,9 @@ impl LTDecoder {
             k,
             original_size,
             decoded_blocks: vec![None; k],
-            pending_packets: Vec::new(),
-            degrees: Vec::new(),
+            packets: Vec::new(),
+            block_to_packets: vec![Vec::new(); k],
+            ripple: Vec::new(),
         }
     }
 
@@ -194,63 +202,100 @@ impl LTDecoder {
             return false;
         }
 
-        self.pending_packets.push(packet);
-        self.degrees.push(self.pending_packets.last().unwrap().block_indices.len());
+        let mut unknown_degree = 0;
+        for &idx in &packet.block_indices {
+            if self.decoded_blocks[idx].is_none() {
+                unknown_degree += 1;
+            }
+        }
+
+        if unknown_degree == 0 {
+            return true;
+        }
+
+        let packet_idx = self.packets.len();
+        for &idx in &packet.block_indices {
+            if self.decoded_blocks[idx].is_none() {
+                self.block_to_packets[idx].push(packet_idx);
+            }
+        }
+
+        self.packets.push(PendingPacket {
+            packet,
+            unknown_degree,
+            consumed: false,
+        });
+
+        if unknown_degree == 1 {
+            self.ripple.push(packet_idx);
+        }
+
         self.belief_propagation();
         true
     }
 
     fn belief_propagation(&mut self) {
-        let mut changed = true;
-        while changed {
-            changed = false;
+        while let Some(packet_idx) = self.ripple.pop() {
+            if packet_idx >= self.packets.len() {
+                continue;
+            }
 
-            let mut i = 0;
-            while i < self.pending_packets.len() {
-                let packet = &self.pending_packets[i];
-                let mut unknown_indices = Vec::new();
+            let pending = &mut self.packets[packet_idx];
+            if pending.consumed {
+                continue;
+            }
+            if pending.unknown_degree != 1 {
+                continue;
+            }
 
-                for &idx in &packet.block_indices {
-                    if self.decoded_blocks[idx].is_none() {
-                        unknown_indices.push(idx);
+            let mut unknown_block_idx: Option<usize> = None;
+            for &idx in &pending.packet.block_indices {
+                if self.decoded_blocks[idx].is_none() {
+                    if unknown_block_idx.is_some() {
+                        unknown_block_idx = None;
+                        break;
                     }
+                    unknown_block_idx = Some(idx);
                 }
+            }
 
-                if unknown_indices.is_empty() {
-                    self.pending_packets.remove(i);
-                    self.degrees.remove(i);
-                    changed = true;
+            let target_idx = match unknown_block_idx {
+                Some(idx) => idx,
+                None => {
+                    pending.consumed = true;
                     continue;
                 }
+            };
 
-                if unknown_indices.len() == 1 {
-                    let target_idx = unknown_indices[0];
-                    let mut result = packet.data.clone();
+            let mut result = pending.packet.data.clone();
+            let block_size = self.block_size;
 
-                    for &idx in &packet.block_indices {
-                        if idx != target_idx {
-                            if let Some(block) = &self.decoded_blocks[idx] {
-                                for (res_byte, &block_byte) in result.iter_mut().zip(block.iter()) {
-                                    *res_byte ^= block_byte;
-                                }
-                            }
+            for &idx in &pending.packet.block_indices {
+                if idx != target_idx {
+                    if let Some(block) = &self.decoded_blocks[idx] {
+                        debug_assert_eq!(block.len(), block_size);
+                        for (res_byte, &block_byte) in result.iter_mut().zip(block.iter()) {
+                            *res_byte ^= block_byte;
                         }
                     }
+                }
+            }
 
-                    self.decoded_blocks[target_idx] = Some(result);
-                    self.pending_packets.remove(i);
-                    self.degrees.remove(i);
-                    changed = true;
+            pending.consumed = true;
+            self.decoded_blocks[target_idx] = Some(result);
 
-                    for j in 0..self.pending_packets.len() {
-                        let indices = &self.pending_packets[j].block_indices;
-                        if indices.contains(&target_idx) {
-                            self.degrees[j] = self.degrees[j].saturating_sub(1);
-                        }
-                    }
-                    break;
-                } else {
-                    i += 1;
+            let affected = std::mem::take(&mut self.block_to_packets[target_idx]);
+            for &affected_pkt_idx in &affected {
+                if affected_pkt_idx >= self.packets.len() {
+                    continue;
+                }
+                let affected_pending = &mut self.packets[affected_pkt_idx];
+                if affected_pending.consumed {
+                    continue;
+                }
+                affected_pending.unknown_degree = affected_pending.unknown_degree.saturating_sub(1);
+                if affected_pending.unknown_degree == 1 {
+                    self.ripple.push(affected_pkt_idx);
                 }
             }
         }
@@ -265,7 +310,7 @@ impl LTDecoder {
     }
 
     pub fn pending_count(&self) -> usize {
-        self.pending_packets.len()
+        self.packets.iter().filter(|p| !p.consumed).count()
     }
 
     pub fn get_data(&self) -> Option<Vec<u8>> {
